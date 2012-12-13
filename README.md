@@ -3,7 +3,7 @@ doppel -- Copy and compile a directory template
 
 ## Synopsis
 
-Like Bizarro Superman, but hotter.
+Output like Bizarro Superman, but hotter.
 
 ### Supported template libraries
 

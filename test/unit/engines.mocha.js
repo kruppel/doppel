@@ -1,52 +1,25 @@
 var _ = require('underscore')
   , handlebars = require('handlebars');
 
-describe('[unit] adapters', function () {
+describe('[unit] engines', function () {
 
-  var adapters = require('./../../lib/adapters');
+  var engines = require('./../../lib/engines');
 
   describe('handlebars', function () {
 
-    describe('.extension', function () {
+    beforeEach(function () {
+      this.engine = engines.handlebars();
+    });
 
-      describe('when passed an extension', function () {
+    afterEach(function () {
+      delete this.engine;
+    });
 
-        beforeEach(function () {
-          this.extension = 'hbs';
-          this.adapter = adapters.handlebars(handlebars, {
-            extension: this.extension
-          });
-        });
-
-        it('sets adapter file extension', function () {
-          this.adapter.extension.should.equal(this.extension);
-        });
-
-      });
-
-      describe('when not passed an extension', function () {
-
-        beforeEach(function () {
-          this.adapter = adapters.handlebars(handlebars);
-        });
-
-        it('defaults to \'handlebars\' file extension', function () {
-          this.adapter.extension.should.equal('handlebars');
-        });
-
-      });
-
+    it('defaults to \'handlebars\' file extension', function () {
+      this.engine.extension.should.equal('handlebars');
     });
 
     describe('.compile', function () {
-
-      beforeEach(function () {
-        this.adapter = adapters.handlebars(handlebars);
-      });
-
-      afterEach(function () {
-        delete this.adapter;
-      });
 
       describe('when template uses helper', function () {
 
@@ -69,7 +42,7 @@ describe('[unit] adapters', function () {
           var template = '<div>{{link title url}}</div>'
             , data = { title: 'home', url: 'http://sherpa.io' };
 
-          this.adapter.compile(template, data).should.equal(
+          this.engine.compile(template, data).should.equal(
             '<div><a href="http://sherpa.io">home</a></div>'
           );
         });
@@ -90,7 +63,7 @@ describe('[unit] adapters', function () {
           var data = { superid: 'obonobo', subid: 'tacocat' }
             , template = '<div id="{{superid}}">{{> subview }}</div>';
 
-          this.adapter.compile(template, data).should.equal(
+          this.engine.compile(template, data).should.equal(
             '<div id="obonobo"><div id="tacocat"></div></div>'
           );
         });
@@ -101,7 +74,7 @@ describe('[unit] adapters', function () {
         var data = { star: 'ter' }
           , template = '!function () { console.log("{{star}}@!"); }()';
 
-        this.adapter.compile(template, data).should.equal(
+        this.engine.compile(template, data).should.equal(
           '!function () { console.log("ter@!"); }()'
         );
       });
@@ -112,52 +85,29 @@ describe('[unit] adapters', function () {
 
   describe('underscore', function () {
 
-    describe('.extension', function () {
+    beforeEach(function () {
+      this.engine = engines.underscore();
+    });
 
-      describe('when passed an extension', function () {
-
-        beforeEach(function () {
-          this.extension = 'underscore';
-          this.adapter = adapters.underscore(_, {
-            extension: this.extension
-          });
-        });
-
-        it('sets adapter file extension', function () {
-          this.adapter.extension.should.equal(this.extension);
-        });
-
-      });
-
-      describe('when not passed an extension', function () {
-
-        beforeEach(function () {
-          this.adapter = adapters.underscore(_);
-        });
-
-        it('defaults to \'jst\' file extension', function () {
-          this.adapter.extension.should.equal('jst');
-        });
-
-      });
-
+    it('defaults to \'jst\' file extension', function () {
+      this.engine.extension.should.equal('jst');
     });
 
     describe('.compile', function () {
 
       beforeEach(function () {
-        this.adapter = adapters.underscore(_);
+        this.engine = engines.underscore();
       });
 
       afterEach(function () {
-        delete this.adapter;
+        delete this.engine;
       });
 
       it('returns a compiled string', function () {
         var data = { under: { the: '||' } }
           , template = '<div class="bridge">====</div><span><%= under.the %></span>';
 
-        this.adapter.compile(template, data).should.equal(
+        this.engine.compile(template, data).should.equal(
           '<div class="bridge">====</div><span>||</span>'
         );
       });

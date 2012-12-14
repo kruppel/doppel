@@ -51,7 +51,7 @@ options = {
 
 };
 
-describe('doppel functional tests', function () {
+describe('[functional] doppel', function () {
 
   _.each(doppel.adapters, function (adapter, name, index) {
 

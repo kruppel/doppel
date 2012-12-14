@@ -7,7 +7,7 @@ var path = require('path')
   , expected = require('./../fixtures').expected
   , assertions = require('./../assertions');
 
-describe('cpr functional tests', function () {
+describe('[functional] cpr', function () {
 
   describe('cpr', function () {
 

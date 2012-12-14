@@ -1,7 +1,7 @@
 var _ = require('underscore')
   , handlebars = require('handlebars');
 
-describe('adapters', function () {
+describe('[unit] adapters', function () {
 
   var adapters = require('./../../lib/adapters');
 

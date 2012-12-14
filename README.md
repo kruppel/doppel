@@ -23,9 +23,9 @@ var context = {
   }
 };
 
-// **NOTE** An adapter must be first set before doppel can be run. A default
-// adapter is __not__ provided, nor is a given adapter's dependent library.
-doppel.adapter = doppel.adapters.underscore(require('underscore'));
+// **NOTE** An engine must be first set before doppel can be run. A default
+// engine is __not__ provided.
+doppel.use('underscore');
 doppel('my/source/dir', 'put/compiled/copy/in/here', context, function (err) {
   if (err) {
     return console.error('Oh noes, something went wrong!\n%s', err.message);
@@ -35,17 +35,20 @@ doppel('my/source/dir', 'put/compiled/copy/in/here', context, function (err) {
 });
 ```
 
+
 ## Install
 
 ```
 npm install doppel
 ```
 
+
 ## Uninstall
 
 ```
 npm uninstall doppel
 ```
+
 
 ## License
 

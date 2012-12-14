@@ -1,6 +1,6 @@
 module.exports = {
 
   expected: require('./expected')
-, adapters: require('./adapters')
+, engines: require('./engines')
 
 };

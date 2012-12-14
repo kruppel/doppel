@@ -1,14 +1,13 @@
 var path = require('path')
   , util = require('util')
   , _ = require('underscore')
-  , handlebars = require('handlebars')
   , mkdirp = require('mkdirp')
   , rimraf = require('rimraf')
   , should = require('chai').should()
   , doppel = require('./../../lib/doppel')
   , fixtures = require('./../fixtures')
   , expected = fixtures.expected
-  , adapted = fixtures.adapters
+  , engineered = fixtures.engines
   , assertions = require('./../assertions')
   , options
   , data;
@@ -21,9 +20,7 @@ data = {
 options = {
 
   handlebars: {
-    lib: handlebars
-  , extension: 'handlebars'
-  , setup: function () {
+    setup: function () {
       handlebars.registerHelper('docify', function (title, options) {
         var out = util.format(
           "<!DOCTYPE html>\n<html>\n<head>\n<title>%s</title>\n</head>\n<body>\n%s\n</body>\n</html>"
@@ -44,18 +41,15 @@ options = {
     }
   }
 
-, underscore: {
-    lib: _
-  , extension: 'jst'
-  }
+, underscore: {}
 
 };
 
 describe('[functional] doppel', function () {
 
-  _.each(doppel.adapters, function (adapter, name, index) {
+  _.each(doppel.engines, function (engine, name, index) {
 
-    var targets = adapted[name];
+    var targets = engineered[name];
 
     describe('for a source directory of \'' + name + '\' templates', function () {
 
@@ -80,7 +74,7 @@ describe('[functional] doppel', function () {
       });
 
       beforeEach(function () {
-        doppel.adapter = doppel.adapters[name](this.options.lib);
+        doppel.use(name);
       });
 
       _.each(targets, function (target, type) {

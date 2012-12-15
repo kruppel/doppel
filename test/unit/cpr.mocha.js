@@ -2,6 +2,7 @@ var fs = require('fs')
   , path = require('path')
   , sinon = require('sinon')
   , should = require('chai').should()
+  , swallow = require('./../shared').swallow
   , commands = require('./../../lib/commands')
   , cpr = require('./../../lib/cpr');
 
@@ -352,11 +353,6 @@ describe('[unit] cpr', function () {
   describe('sync', function () {
 
     var rimraf = commands['rm -rf'];
-
-    function swallow(thrower) {
-      try { thrower(); }
-      catch (e) {}
-    }
 
     beforeEach(function () {
       sinon.spy(cpr, 'sync');

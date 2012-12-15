@@ -27,7 +27,7 @@ describe('[functional] cpr', function () {
         });
 
         it('creates a compiled copy of the directory', function (done) {
-          cpr(src, dest, function (err) {
+          cpr.cpr(src, dest, function (err) {
             if (err) throw err;
 
             assertions.assertDirsEqual(src, dest, function (err) {

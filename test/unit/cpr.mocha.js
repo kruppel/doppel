@@ -46,7 +46,7 @@ describe('[unit] cpr', function () {
       });
 
       it('calls back with error', function () {
-        cpr(this.src, this.dest, this.callback);
+        cpr.cpr(this.src, this.dest, this.callback);
 
         this.callback.should.have.been.calledWithExactly(this.rimrafError);
       });
@@ -79,7 +79,7 @@ describe('[unit] cpr', function () {
         });
 
         it('calls back with error', function () {
-          cpr(this.src, this.dest, this.callback);
+          cpr.cpr(this.src, this.dest, this.callback);
 
           this.callback.should.have.been.calledWithExactly(this.mkdirpError);
         });
@@ -111,7 +111,7 @@ describe('[unit] cpr', function () {
           });
 
           it('calls back with error', function () {
-            cpr(this.src, this.dest, this.callback);
+            cpr.cpr(this.src, this.dest, this.callback);
 
             this.callback.should.have.been.calledWithExactly(this.fsReaddirError);
           });
@@ -133,7 +133,7 @@ describe('[unit] cpr', function () {
             });
 
             it('calls back without error', function () {
-              cpr(this.src, this.dest, this.callback);
+              cpr.cpr(this.src, this.dest, this.callback);
 
               this.callback.should.have.been.calledWithExactly();
             });
@@ -173,7 +173,7 @@ describe('[unit] cpr', function () {
               });
 
               it('calls back with error', function () {
-                cpr(this.src, this.dest, this.callback);
+                cpr.cpr(this.src, this.dest, this.callback);
 
                 this.callback.should.have.been.calledWithExactly(
                   this.fsStatError
@@ -234,7 +234,7 @@ describe('[unit] cpr', function () {
                   });
 
                   it('calls back with error', function () {
-                    cpr(this.src, this.dest, this.callback);
+                    cpr.cpr(this.src, this.dest, this.callback);
 
                     this.callback.should.have.been.calledWithExactly(this.streamingError);
                   });
@@ -263,7 +263,7 @@ describe('[unit] cpr', function () {
                   });
 
                   it('calls back without error', function () {
-                    cpr(this.src, this.dest, this.callback);
+                    cpr.cpr(this.src, this.dest, this.callback);
 
                     this.callback.should.have.been.calledWithExactly(null);
                   });
@@ -307,7 +307,7 @@ describe('[unit] cpr', function () {
                   });
 
                   it('calls back with error', function () {
-                    cpr(this.src, this.dest, this.callback);
+                    cpr.cpr(this.src, this.dest, this.callback);
 
                     this.callback.should.have.been.calledWithExactly(
                       this.rimrafError
@@ -329,7 +329,7 @@ describe('[unit] cpr', function () {
                   });
 
                   it('calls back without error', function () {
-                    cpr(this.src, this.dest, this.callback);
+                    cpr.cpr(this.src, this.dest, this.callback);
 
                     this.callback.should.have.been.calledWithExactly(null);
                   });
@@ -465,7 +465,7 @@ describe('[unit] cpr', function () {
             it('returns undefined', function () {
               cpr.sync(this.src, this.dest);
 
-              should.not.exist(cpr(this.src, this.dest));
+              should.not.exist(cpr.cpr(this.src, this.dest));
             });
 
           });

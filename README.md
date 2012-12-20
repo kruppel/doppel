@@ -3,7 +3,11 @@ doppel -- Copy and compile a directory template
 
 ## Synopsis
 
-Output like Bizarro Superman, but hotter.
+Boilerplate sucks. Writing it by hand sucks even more. Take the pain out
+by copying and compiling a directory template. A quick "doppel" and
+presto, it's done.
+
+Brought to you by [Sherpa](http://www.sherpa.io).
 
 ### Supported template libraries
 

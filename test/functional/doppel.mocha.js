@@ -1,10 +1,12 @@
 var path = require('path')
   , util = require('util')
   , _ = require('underscore')
+  , handlebars = require('handlebars')
   , mkdirp = require('mkdirp')
   , rimraf = require('rimraf')
   , should = require('chai').should()
   , doppel = require('./../../lib/doppel')
+  , engines = require('./../../lib/engines')
   , fixtures = require('./../fixtures')
   , expected = fixtures.expected
   , engineered = fixtures.engines
@@ -47,7 +49,7 @@ options = {
 
 describe('[functional] doppel', function () {
 
-  _.each(doppel.engines, function (engine, name, index) {
+  _.each(engines, function (engine, name, index) {
 
     var targets = engineered[name];
 

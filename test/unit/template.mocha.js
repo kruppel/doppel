@@ -210,7 +210,7 @@ describe('[unit] Template', function () {
 
               beforeEach(function () {
                 this.unlinkError = sinon.stub();
-                fs.unlink.withArgs(this.dest, this.callback)
+                fs.unlink.withArgs(this.src, this.callback)
                          .yields(this.unlinkError);
 
                 this.template.compile(this.data, this.callback);
@@ -229,7 +229,7 @@ describe('[unit] Template', function () {
             describe('and source file is cleaned up', function () {
 
               beforeEach(function () {
-                fs.unlink.withArgs(this.dest, this.callback).yields();
+                fs.unlink.withArgs(this.src, this.callback).yields();
 
                 this.template.compile(this.data, this.callback);
               });
@@ -253,7 +253,7 @@ describe('[unit] Template', function () {
 
               beforeEach(function () {
                 this.unlinkError = sinon.stub();
-                fs.unlink.withArgs(this.dest, this.callback)
+                fs.unlink.withArgs(this.src, this.callback)
                          .yields(this.unlinkError);
 
                 this.template.compile(this.data, this.callback);
@@ -272,7 +272,7 @@ describe('[unit] Template', function () {
             describe('and source file is cleaned up', function () {
 
               beforeEach(function () {
-                fs.unlink.withArgs(this.dest, this.callback).yields();
+                fs.unlink.withArgs(this.src, this.callback).yields();
 
                 this.template.compile(this.data, this.callback);
               });

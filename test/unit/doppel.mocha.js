@@ -258,6 +258,7 @@ describe('[unit] doppel', function () {
             this.globError = sinon.stub();
             glob.Glob.withArgs(
               util.format('%s/**/*.%s', this.dest, 'jst')
+            , undefined
             , sinon.match.func
             ).yields(this.globError);
 
@@ -282,6 +283,7 @@ describe('[unit] doppel', function () {
               this.files = [];
               glob.Glob.withArgs(
                 util.format('%s/**/*.%s', this.dest, 'jst')
+              , undefined
               , sinon.match.func
               ).yields(null, this.files);
 
@@ -307,6 +309,7 @@ describe('[unit] doppel', function () {
 
               glob.Glob.withArgs(
                 util.format('%s/**/*.%s', this.dest, 'jst')
+              , undefined
               , sinon.match.func
               ).yields(null, this.files);
 

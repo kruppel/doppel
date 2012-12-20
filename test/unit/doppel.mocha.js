@@ -75,7 +75,7 @@ describe('[unit] doppel', function () {
           describe('and passing an alternate extension, .' + alt, function () {
 
             beforeEach(function () {
-              doppel.use(name, { extension: alt });
+              this.rv = doppel.use(name, { extension: alt });
 
               this.actualEngine = doppel.engine;
               this.expectedEngine = engine();
@@ -88,6 +88,10 @@ describe('[unit] doppel', function () {
 
             it('sets engine extension to .' + alt, function () {
               doppel.engine.extension.should.equal(alt);
+            });
+
+            it('returns this for chaining', function () {
+              this.rv.should.equal(doppel);
             });
 
           });
@@ -112,6 +116,10 @@ describe('[unit] doppel', function () {
 
             it('uses default engine extension', function () {
               this.actualEngine.extension.should.equal(this.expectedEngine.extension);
+            });
+
+            it('returns this for chaining', function () {
+              this.rv.should.equal(doppel);
             });
 
           });

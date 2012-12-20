@@ -121,166 +121,85 @@ describe('[unit] Template', function () {
           this.engine.compile.withArgs(this.readData, this.data)
                              .returns(this.compiledTemplate);
 
-          sinon.stub(fs, 'createWriteStream');
+          sinon.stub(fs, 'writeFile');
         });
 
         afterEach(function () {
-          fs.createWriteStream.restore();
+          fs.writeFile.restore();
 
           delete this.compiledTemplate;
         });
 
-        describe('and destination write stream fails to be created', function () {
+        describe('and destination write errs', function () {
 
           beforeEach(function () {
-            this.createWriteStreamError = sinon.stub();
-            fs.createWriteStream.withArgs(this.dest, { encoding: 'utf8' })
-                                .throws(this.createWriteStreamError);
+            this.writeError = sinon.stub();
+            fs.writeFile.withArgs(
+              this.dest
+            , this.compiledTemplate
+            , sinon.match.func
+            ).yields(this.writeError);
 
             this.template.compile(this.data, this.callback);
           });
 
           afterEach(function () {
-            delete this.createWriteStreamError;
+            delete this.writeError;
           });
 
           it('calls back with error', function () {
-            this.callback.should.have.been.calledWithExactly(
-              this.createWriteStreamError
-            );
+            this.callback.should.have.been.calledWith(this.writeError);
           });
 
         });
 
-        describe('and destination write stream is created', function () {
+
+        describe('and destination write succeeds', function () {
 
           beforeEach(function () {
-            this.writeStream = {
-              once: sinon.stub()
-            , write: sinon.stub()
-            };
-            fs.createWriteStream.withArgs(this.dest, { encoding: 'utf8' })
-                                .returns(this.writeStream);
-
-            this.template.compile(this.data, this.callback);
-
-            this.bufferMatcher = function (buffer) {
-              return buffer instanceof Buffer && buffer.toString() === this.compiledTemplate;
-            }.bind(this);
+            fs.writeFile.withArgs(
+              this.dest
+            , this.compiledTemplate
+            , sinon.match.func
+            ).yields();
 
             sinon.stub(fs, 'unlink');
           });
 
           afterEach(function () {
             fs.unlink.restore();
-
-            delete this.writeStream;
-            delete this.bufferMatcher;
           });
 
-          describe('and destination write errs', function () {
+          describe('and source file fails to be cleaned up', function () {
 
             beforeEach(function () {
-              this.writeStreamError = sinon.stub();
-              this.writeStream.once.withArgs('error').yields(this.writeStreamError);
+              this.unlinkError = sinon.stub();
+              fs.unlink.withArgs(this.src, this.callback)
+                       .yields(this.unlinkError);
 
               this.template.compile(this.data, this.callback);
             });
 
             afterEach(function () {
-              delete this.writeStreamError;
+              delete this.unlinkError;
             });
 
             it('calls back with error', function () {
-              this.callback.should.have.been.calledWith(this.writeStreamError);
+              this.callback.should.have.been.calledWithExactly(this.unlinkError);
             });
 
           });
 
-
-          describe('and destination write is deferred due to kernel buffer being full', function () {
-
-            beforeEach(function () {
-              this.writeStream.write.withArgs(sinon.match(this.bufferMatcher))
-                                    .returns(false);
-              this.writeStream.once.withArgs('drain').yields();
-            });
-
-            describe('and source file fails to be cleaned up', function () {
-
-              beforeEach(function () {
-                this.unlinkError = sinon.stub();
-                fs.unlink.withArgs(this.src, this.callback)
-                         .yields(this.unlinkError);
-
-                this.template.compile(this.data, this.callback);
-              });
-
-              afterEach(function () {
-                delete this.unlinkError;
-              });
-
-              it('calls back with error', function () {
-                this.callback.should.have.been.calledWithExactly(this.unlinkError);
-              });
-
-            });
-
-            describe('and source file is cleaned up', function () {
-
-              beforeEach(function () {
-                fs.unlink.withArgs(this.src, this.callback).yields();
-
-                this.template.compile(this.data, this.callback);
-              });
-
-              it('calls back without error', function () {
-                this.callback.should.have.been.calledWithExactly();
-              });
-
-            });
-
-          });
-
-          describe('and destination write flushes to kernel buffer', function () {
+          describe('and source file is cleaned up', function () {
 
             beforeEach(function () {
-              this.writeStream.write.withArgs(sinon.match(this.bufferMatcher))
-                                    .returns(true);
+              fs.unlink.withArgs(this.src, this.callback).yields();
+
+              this.template.compile(this.data, this.callback);
             });
 
-            describe('and source file fails to be cleaned up', function () {
-
-              beforeEach(function () {
-                this.unlinkError = sinon.stub();
-                fs.unlink.withArgs(this.src, this.callback)
-                         .yields(this.unlinkError);
-
-                this.template.compile(this.data, this.callback);
-              });
-
-              afterEach(function () {
-                delete this.unlinkError;
-              });
-
-              it('calls back with error', function () {
-                this.callback.should.have.been.calledWithExactly(this.unlinkError);
-              });
-
-            });
-
-            describe('and source file is cleaned up', function () {
-
-              beforeEach(function () {
-                fs.unlink.withArgs(this.src, this.callback).yields();
-
-                this.template.compile(this.data, this.callback);
-              });
-
-              it('calls back without error', function () {
-                this.callback.should.have.been.calledWithExactly();
-              });
-
+            it('calls back without error', function () {
+              this.callback.should.have.been.calledWithExactly();
             });
 
           });

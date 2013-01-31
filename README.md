@@ -56,7 +56,7 @@ npm uninstall doppel
 
 ## License
 
-Copyright (C) 2012 Pioneers of the Imminently Feasible
+Copyright (C) 2013 Pioneers of the Imminently Feasible
 
 Permission is hereby granted, free of charge, to any person obtaining a copy of
 this software and associated documentation files (the "Software"), to deal in

@@ -5,6 +5,10 @@ TESTS := test/**/*.mocha.js
 
 GREP ?=.*
 
+# Build the man page
+man:
+	ronn --roff man/doppel.1.ronn
+
 # JSHint!
 lint: $(GRUNT); $(GRUNT) lint
 
@@ -18,4 +22,4 @@ test: lint
 # Run the tests with the debugger
 test-debug: $(MOCHA); NODE_ENV=test $(MOCHA) --debug-brk --grep "$(GREP)" $(TESTS)
 
-.PHONY: lint watch test test-debug
+.PHONY: man lint watch test test-debug

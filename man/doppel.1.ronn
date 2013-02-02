@@ -1,0 +1,51 @@
+doppel(1) -- copy and compile template directories
+==================================================
+
+## SYNOPSIS
+
+  `doppel` [`-V`|`--version`]
+
+  `doppel` [`-v`|`--verbose`] [`-d`|`--data` <context>] [options] <source> <destination>
+
+## DESCRIPTION
+
+**Doppel** recursively copies files from a given directory and compiles all
+templates in the directory copy.
+
+## OPTIONS
+
+  * `-V`, `--version`:
+    Prints the current `doppel` version.
+
+  * `-v`, `--verbose`:
+    Useful for debugging, the verbose flag sets the `doppel` logging level to
+    debug mode.
+
+  * `-d`, `--data` <context>:
+    [required] Data/context to interpolate into the templates. Acceptable
+    arguments are a valid JSON string or a JSON filename.
+
+  * `-e`, `--engine` <engine>:
+    Template engine for compiling templates. By default, `doppel` uses
+    underscore. Available options are:
+
+    `underscore`
+
+    `handlebars`
+
+  * `-x`, `--extension` <file_extension>:
+    Template extension to use. At the compile stage, `doppel` will find all
+    files with a given file extension to denote the file as a template. The
+    compiled copy will be trimmed of the file extension (e.g.
+    (input) example.js.given_file_extension -> (output) example.js). Each
+    template has a default file extension, as follows:
+
+    `underscore`: `jst`
+
+    `handlebars`: `handlebars`
+
+  * `-f`, `--force`:
+    To be safe, `doppel` errors when the destination directory already exists.
+    Passing the force flag will override this behavior, force writing over the
+    destination directory.
+

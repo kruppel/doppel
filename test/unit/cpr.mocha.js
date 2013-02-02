@@ -21,317 +21,378 @@ describe('[unit] cpr', function () {
   describe('async', function () {
 
     beforeEach(function () {
-      this.callback = sinon.stub();
-
-      this.rimrafStub = sinon.stub(commands, 'rm -rf');
+      this.fsExistsStub = sinon.stub(fs, 'exists');
     });
 
     afterEach(function () {
-      this.rimrafStub.restore();
+      this.fsExistsStub.restore();
 
-      delete this.callback;
-      delete this.rimrafStub;
+      delete this.fsExistsStub;
     });
 
-    describe('when destination directory removal fails', function () {
+    describe('when source directory does not exist', function () {
 
       beforeEach(function () {
-        this.rimrafError = sinon.stub();
-        this.rimrafStub.withArgs(this.dest, sinon.match.func)
-                       .yields(this.rimrafError);
+        this.fsExistsStub.withArgs(this.src, sinon.match.func)
+                         .yields(false);
+      });
+
+      it('calls back with error', function (done) {
+        cpr.cpr(this.src, this.dest, function () {
+          [].slice.call(arguments)[0].message.should.eql(
+            this.src + ' does not exist.'
+          );
+
+          done();
+        }.bind(this));
+      });
+
+    });
+
+    describe('when source directory exists', function () {
+
+      beforeEach(function () {
+        this.fsExistsStub.withArgs(this.src, sinon.match.func)
+                         .yields(true);
+        this.rimrafStub = sinon.stub(commands, 'rm -rf');
       });
 
       afterEach(function () {
-        delete this.rimrafError;
+        this.rimrafStub.restore();
+
+        delete this.rimrafStub;
       });
 
-      it('calls back with error', function () {
-        cpr.cpr(this.src, this.dest, this.callback);
-
-        this.callback.should.have.been.calledWithExactly(this.rimrafError);
-      });
-
-    });
-
-    describe('when destination directory removal succeeds', function () {
-
-      beforeEach(function () {
-        this.rimrafStub.withArgs(this.dest, sinon.match.func)
-                       .yields();
-
-        this.mkdirpStub = sinon.stub(commands, 'mkdir -p');
-      });
-
-      afterEach(function () {
-        this.mkdirpStub.restore();
-      });
-
-      describe('and destination directory creation fails', function () {
+      describe('when destination directory removal fails', function () {
 
         beforeEach(function () {
-          this.mkdirpError = sinon.stub();
-          this.mkdirpStub.withArgs(this.dest, sinon.match.func)
-                         .yields(this.mkdirpError);
+          this.rimrafError = sinon.stub();
+          this.rimrafStub.withArgs(this.dest, sinon.match.func)
+                         .yields(this.rimrafError);
         });
 
         afterEach(function () {
-          delete this.mkdirpError;
+          delete this.rimrafError;
         });
 
-        it('calls back with error', function () {
-          cpr.cpr(this.src, this.dest, this.callback);
+        it('calls back with error', function (done) {
+          cpr.cpr(this.src, this.dest, function () {
+            [].slice.call(arguments).should.eql([
+              this.rimrafError
+            ]);
 
-          this.callback.should.have.been.calledWithExactly(this.mkdirpError);
+            done();
+          }.bind(this));
         });
 
       });
 
-      describe('and destination directory creation succeeds', function () {
+      describe('when destination directory removal succeeds', function () {
 
         beforeEach(function () {
-          this.mkdirpStub.withArgs(this.dest, sinon.match.func)
+          this.rimrafStub.withArgs(this.dest, sinon.match.func)
                          .yields();
 
-          sinon.stub(fs, 'readdir');
+          this.mkdirpStub = sinon.stub(commands, 'mkdir -p');
         });
 
         afterEach(function () {
-          fs.readdir.restore();
+          this.mkdirpStub.restore();
         });
 
-        describe('and reading source directory fails', function () {
+        describe('and destination directory creation fails', function (done) {
 
           beforeEach(function () {
-            this.fsReaddirError = sinon.stub();
-            fs.readdir.withArgs(this.src).yields(this.fsReaddirError);
+            this.mkdirpError = sinon.stub();
+            this.mkdirpStub.withArgs(this.dest, sinon.match.func)
+                           .yields(this.mkdirpError);
           });
 
           afterEach(function () {
-            delete this.fsReaddirError;
+            delete this.mkdirpError;
           });
 
-          it('calls back with error', function () {
-            cpr.cpr(this.src, this.dest, this.callback);
+          it('calls back with error', function (done) {
+            cpr.cpr(this.src, this.dest, function () {
+              [].slice.call(arguments).should.eql([
+                this.mkdirpError
+              ]);
 
-            this.callback.should.have.been.calledWithExactly(this.fsReaddirError);
+              done();
+            }.bind(this));
           });
 
         });
 
-        describe('and reading source directory succeeds', function () {
+        describe('and destination directory creation succeeds', function () {
+
+          beforeEach(function () {
+            this.mkdirpStub.withArgs(this.dest, sinon.match.func)
+                           .yields(null, this.dest);
+
+            sinon.stub(fs, 'readdir');
+          });
 
           afterEach(function () {
-            delete this.files;
+            fs.readdir.restore();
           });
 
-          describe('and directory has no files', function () {
+          describe('and reading source directory fails', function () {
 
             beforeEach(function () {
-              this.files = [];
-
-              fs.readdir.withArgs(this.src).yields(null, this.files);
-            });
-
-            it('calls back without error', function () {
-              cpr.cpr(this.src, this.dest, this.callback);
-
-              this.callback.should.have.been.calledWithExactly();
-            });
-
-          });
-
-          describe('and directory has a file', function () {
-
-            beforeEach(function () {
-              this.files = [ 'testfile' ];
-              this.fileSrc = path.join(this.src, 'testfile');
-              this.fileDest = path.join(this.dest, 'testfile');
-
-              fs.readdir.withArgs(this.src).yields(null, this.files);
-              sinon.stub(fs, 'stat');
+              this.fsReaddirError = sinon.stub();
+              fs.readdir.withArgs(this.src).yields(this.fsReaddirError);
             });
 
             afterEach(function () {
-              fs.stat.restore();
-              cpr.restore && (cpr = this._cpr);
-
-              delete this.fileSrc;
-              delete this.fileDest;
-              delete this._cpr;
+              delete this.fsReaddirError;
             });
 
-            describe('and file stat retrieval fails', function () {
+            it('calls back with error', function (done) {
+              cpr.cpr(this.src, this.dest, function () {
+                [].slice.call(arguments).should.eql([
+                  this.fsReaddirError
+                ]);
 
-              beforeEach(function () {
-                this.fsStatError = sinon.stub();
-                fs.stat.withArgs(this.fileSrc, sinon.match.func)
-                       .yields(this.fsStatError);
-              });
-
-              afterEach(function () {
-                delete this.fsStatError;
-              });
-
-              it('calls back with error', function () {
-                cpr.cpr(this.src, this.dest, this.callback);
-
-                this.callback.should.have.been.calledWithExactly(
-                  this.fsStatError
-                );
-              });
+                done();
+              }.bind(this));
 
             });
 
-            describe('and file stat retrieval succeeds', function () {
+          });
+
+          describe('and reading source directory succeeds', function () {
+
+            afterEach(function () {
+              delete this.files;
+            });
+
+            describe('and directory has no files', function () {
 
               beforeEach(function () {
-                this.fstat = {
-                  isDirectory: sinon.stub()
-                };
-                fs.stat.withArgs(this.fileSrc, sinon.match.func)
-                       .yields(null, this.fstat);
+                this.files = [];
+
+                fs.readdir.withArgs(this.src).yields(null, this.files);
+              });
+
+              it('calls back without error', function (done) {
+                cpr.cpr(this.src, this.dest, function () {
+                  [].slice(arguments).should.eql([]);
+
+                  done();
+                });
+
+              });
+
+            });
+
+            describe('and directory has a file', function () {
+
+              beforeEach(function () {
+                this.files = [ 'testfile' ];
+                this.fileSrc = path.join(this.src, 'testfile');
+                this.fileDest = path.join(this.dest, 'testfile');
+
+                fs.readdir.withArgs(this.src).yields(null, this.files);
+                sinon.stub(fs, 'stat');
               });
 
               afterEach(function () {
-                delete this.fstat;
+                fs.stat.restore();
+                cpr.restore && (cpr = this._cpr);
+
+                delete this.fileSrc;
+                delete this.fileDest;
+                delete this._cpr;
               });
 
-              describe('and file is not a directory', function () {
+              describe('and file stat retrieval fails', function () {
 
                 beforeEach(function () {
-                  this.fstat.isDirectory.returns(false);
-
-                  sinon.stub(fs, 'createReadStream');
-                  sinon.stub(fs, 'createWriteStream');
+                  this.fsStatError = sinon.stub();
+                  fs.stat.withArgs(this.fileSrc, sinon.match.func)
+                         .yields(this.fsStatError);
                 });
 
                 afterEach(function () {
-                  fs.createReadStream.restore();
-                  fs.createWriteStream.restore();
+                  delete this.fsStatError;
                 });
 
-                describe('and file copy fails', function () {
+                it('calls back with error', function (done) {
+                  cpr.cpr(this.src, this.dest, function () {
+                    [].slice.call(arguments).should.eql([
+                      this.fsStatError
+                    ]);
 
-                  beforeEach(function () {
-                    var self = this
-                      , callbacks = {};
-
-                    this.streamingError = sinon.stub();
-                    this.readStream = {
-                      on: function (event, callback) {
-                        callbacks[event] = callback;
-                      }
-                    , pipe: function (stream) {
-                        callbacks.error(self.streamingError);
-                      }
-                    };
-                    fs.createReadStream.withArgs(this.fileSrc, { encoding: 'utf8' })
-                                       .returns(this.readStream);
-                  });
-
-                  afterEach(function () {
-                    delete this.readStream;
-                  });
-
-                  it('calls back with error', function () {
-                    cpr.cpr(this.src, this.dest, this.callback);
-
-                    this.callback.should.have.been.calledWithExactly(this.streamingError);
-                  });
-
-                });
-
-                describe('and file copy succeeds', function () {
-
-                  beforeEach(function () {
-                    var callbacks = {};
-
-                    this.readStream = {
-                      on: function (event, callback) {
-                        callbacks[event] = callback;
-                      }
-                    , pipe: function (stream) {
-                        callbacks.end();
-                      }
-                    };
-                    fs.createReadStream.withArgs(this.fileSrc, { encoding: 'utf8' })
-                                       .returns(this.readStream);
-                  });
-
-                  afterEach(function () {
-                    delete this.readStream;
-                  });
-
-                  it('calls back without error', function () {
-                    cpr.cpr(this.src, this.dest, this.callback);
-
-                    this.callback.should.have.been.calledWithExactly(null);
-                  });
-
-                });
-
-              });
-
-              describe('and file is a directory', function () {
-
-                beforeEach(function () {
-                  var resolve = path.resolve;
-
-                  this.fstat.isDirectory.returns(true);
-
-                  // Duck punch `path.resolve`, since the 'testfile' does
-                  // not exist and will fail to resolve.
-                  sinon.stub(path, 'resolve', function (path1, path2) {
-                    if (path2 === this.fileDest || path2 === this.fileSrc) {
-                      return path2;
-                    }
-
-                    return resolve(path1, path2);
+                    done();
                   }.bind(this));
                 });
 
-                afterEach(function () {
-                  path.resolve.restore();
+              });
+
+              describe('and file stat retrieval succeeds', function () {
+
+                beforeEach(function () {
+                  this.fstat = {
+                    isDirectory: sinon.stub()
+                  };
+                  fs.stat.withArgs(this.fileSrc, sinon.match.func)
+                         .yields(null, this.fstat);
                 });
 
-                describe('and directory copy fails', function () {
+                afterEach(function () {
+                  delete this.fstat;
+                });
+
+                describe('and file is not a directory', function () {
 
                   beforeEach(function () {
-                    this.rimrafError = sinon.stub();
-                    this.rimrafStub.withArgs(this.fileDest, sinon.match.func)
-                                   .yields(this.rimrafError);
+                    this.fstat.isDirectory.returns(false);
+
+                    sinon.stub(fs, 'createReadStream');
+                    sinon.stub(fs, 'createWriteStream');
                   });
 
                   afterEach(function () {
-                    delete this.rimrafError;
+                    fs.createReadStream.restore();
+                    fs.createWriteStream.restore();
                   });
 
-                  it('calls back with error', function () {
-                    cpr.cpr(this.src, this.dest, this.callback);
+                  describe('and file copy fails', function () {
 
-                    this.callback.should.have.been.calledWithExactly(
-                      this.rimrafError
-                    );
+                    beforeEach(function () {
+                      var self = this
+                        , callbacks = {};
+
+                      this.streamingError = sinon.stub();
+                      this.readStream = {
+                        on: function (event, callback) {
+                          callbacks[event] = callback;
+                        }
+                      , pipe: function (stream) {
+                          callbacks.error(self.streamingError);
+                        }
+                      };
+                      fs.createReadStream.withArgs(this.fileSrc, { encoding: 'utf8' })
+                                         .returns(this.readStream);
+                    });
+
+                    afterEach(function () {
+                      delete this.readStream;
+                    });
+
+                    it('calls back with error', function (done) {
+                      cpr.cpr(this.src, this.dest, function () {
+                        [].slice.call(arguments).should.eql([
+                          this.streamingError
+                        ]);
+
+                        done();
+                      }.bind(this));
+                    });
+
+                  });
+
+                  describe('and file copy succeeds', function () {
+
+                    beforeEach(function () {
+                      var callbacks = {};
+
+                      this.readStream = {
+                        on: function (event, callback) {
+                          callbacks[event] = callback;
+                        }
+                      , pipe: function (stream) {
+                          callbacks.end();
+                        }
+                      };
+                      fs.createReadStream.withArgs(this.fileSrc, { encoding: 'utf8' })
+                                         .returns(this.readStream);
+                    });
+
+                    afterEach(function () {
+                      delete this.readStream;
+                    });
+
+                    it('calls back without error', function (done) {
+                      cpr.cpr(this.src, this.dest, function () {
+                        [].slice.call(arguments).should.eql([ null ]);
+
+                        done();
+                      }.bind(this));
+                    });
+
                   });
 
                 });
 
-                describe('and directory copy succeeds', function () {
+                describe('and file is a directory', function () {
 
                   beforeEach(function () {
-                    this.rimrafStub.withArgs(this.fileDest, sinon.match.func)
-                                   .yields();
-                    this.mkdirpStub.withArgs(this.fileDest, sinon.match.func)
-                                   .yields();
+                    var resolve = path.resolve;
 
-                    fs.readdir.withArgs(this.fileSrc, sinon.match.func)
-                              .yields(null, []);
+                    this.fstat.isDirectory.returns(true);
+
+                    // Duck punch `path.resolve`, since the 'testfile' does
+                    // not exist and will fail to resolve.
+                    sinon.stub(path, 'resolve', function (path1, path2) {
+                      if (path2 === this.fileDest || path2 === this.fileSrc) {
+                        return path2;
+                      }
+
+                      return resolve(path1, path2);
+                    }.bind(this));
+
+                    this.fsExistsStub.withArgs(this.fileSrc, sinon.match.func)
+                                     .yields(true);
                   });
 
-                  it('calls back without error', function () {
-                    cpr.cpr(this.src, this.dest, this.callback);
+                  afterEach(function () {
+                    path.resolve.restore();
+                  });
 
-                    this.callback.should.have.been.calledWithExactly(null);
+                  describe('and directory copy fails', function () {
+
+                    beforeEach(function () {
+                      this.rimrafError = sinon.stub();
+                      this.rimrafStub.withArgs(this.fileDest, sinon.match.func)
+                                     .yields(this.rimrafError);
+                    });
+
+                    afterEach(function () {
+                      delete this.rimrafError;
+                    });
+
+                    it('calls back with error', function (done) {
+                      cpr.cpr(this.src, this.dest, function () {
+                        [].slice.call(arguments).should.eql([ this.rimrafError ]);
+
+                        done();
+                      }.bind(this));
+                    });
+
+                  });
+
+                  describe('and directory copy succeeds', function () {
+
+                    beforeEach(function () {
+                      this.rimrafStub.withArgs(this.fileDest, sinon.match.func)
+                                     .yields();
+                      this.mkdirpStub.withArgs(this.fileDest, sinon.match.func)
+                                     .yields(null, this.fileDest);
+
+                      fs.readdir.withArgs(this.fileSrc, sinon.match.func)
+                                .yields(null, []);
+                    });
+
+                    it('calls back without error', function (done) {
+                      cpr.cpr(this.src, this.dest, function () {
+                        [].slice.call(arguments).should.eql([ null ]);
+
+                        done();
+                      }.bind(this));
+                    });
+
                   });
 
                 });

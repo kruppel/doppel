@@ -3,6 +3,7 @@ var fs = require('fs')
   , sinon = require('sinon')
   , should = require('chai').should()
   , swallow = require('./../shared').swallow
+  , InvalidSrcError = require('./../../lib/errors/invalid_src')
   , commands = require('./../../lib/commands')
   , cpr = require('./../../lib/cpr');
 
@@ -30,6 +31,20 @@ describe('[unit] cpr', function () {
       delete this.fsExistsStub;
     });
 
+    describe('when a source directory is not passed', function () {
+
+      it('calls back with error', function (done) {
+        cpr.cpr(undefined, this.dest, function () {
+          [].slice.call(arguments)[0].message.should.equal(
+            'Source path must be provided.'
+          );
+
+          done();
+        });
+      });
+
+    });
+
     describe('when source directory does not exist', function () {
 
       beforeEach(function () {
@@ -39,7 +54,7 @@ describe('[unit] cpr', function () {
 
       it('calls back with error', function (done) {
         cpr.cpr(this.src, this.dest, function () {
-          [].slice.call(arguments)[0].message.should.eql(
+          [].slice.call(arguments)[0].message.should.equal(
             'Source path ' + this.src + ' does not exist.'
           );
 
@@ -417,275 +432,309 @@ describe('[unit] cpr', function () {
 
     beforeEach(function () {
       sinon.spy(cpr, 'sync');
+      sinon.stub(fs, 'existsSync');
     });
 
     afterEach(function () {
       cpr.sync.restore();
+      fs.existsSync.restore();
     });
 
-    describe('when destination directory removal fails', function () {
+    describe('when a source directory is not passed', function () {
 
-      beforeEach(function () {
-        this.rimrafError = sinon.stub();
-        sinon.stub(rimraf, 'sync').throws(this.rimrafError);
+      it('throws an error', function () {
+        swallow(function () { cpr.sync(undefined, this.dest); }.bind(this));
+
+        cpr.sync.should.throw(InvalidSrcError);
       });
 
-      afterEach(function () {
-        rimraf.sync.restore();
+    });
 
-        delete this.rimrafError;
+    describe('when source directory does not exist', function () {
+
+      beforeEach(function () {
+        fs.existsSync.withArgs(this.src).returns(false);
       });
 
       it('throws an error', function () {
         swallow(function () { cpr.sync(this.src, this.dest); }.bind(this));
 
-        cpr.sync.should.have.thrown(this.rimrafError);
+        cpr.sync.should.throw(InvalidSrcError);
       });
 
     });
 
-    describe('when destination directory removal succeeds', function () {
-
-      var mkdirp = commands['mkdir -p'];
+    describe('when source directory exists', function () {
 
       beforeEach(function () {
-        sinon.stub(rimraf, 'sync').returns();
+        fs.existsSync.withArgs(this.src).returns(true);
       });
 
-      afterEach(function () {
-        rimraf.sync.restore();
-      });
-
-      describe('and destination directory creation fails', function () {
+      describe('when destination directory removal fails', function () {
 
         beforeEach(function () {
-          this.mkdirpError = new Error('mkdirp fail fail fail');
-          sinon.stub(mkdirp, 'sync').throws(this.mkdirpError);
+          this.rimrafError = sinon.stub();
+          sinon.stub(rimraf, 'sync').throws(this.rimrafError);
         });
 
         afterEach(function () {
-          mkdirp.sync.restore();
+          rimraf.sync.restore();
 
-          delete this.mkdirpError;
+          delete this.rimrafError;
         });
 
         it('throws an error', function () {
           swallow(function () { cpr.sync(this.src, this.dest); }.bind(this));
 
-          cpr.sync.should.have.thrown(this.mkdirpError);
+          cpr.sync.should.have.thrown(this.rimrafError);
         });
 
       });
 
-      describe('and destination directory creation succeeds', function () {
+      describe('when destination directory removal succeeds', function () {
+
+        var mkdirp = commands['mkdir -p'];
 
         beforeEach(function () {
-          sinon.stub(mkdirp, 'sync').returns();
+          sinon.stub(rimraf, 'sync').returns();
         });
 
         afterEach(function () {
-          mkdirp.sync.restore();
+          rimraf.sync.restore();
         });
 
-        describe('and reading source directory fails', function () {
+        describe('and destination directory creation fails', function () {
 
           beforeEach(function () {
-            this.fsReaddirError = new Error('fs.readdir fail fail fail');
-            sinon.stub(fs, 'readdirSync').throws(this.fsReaddirError);
+            this.mkdirpError = new Error('mkdirp fail fail fail');
+            sinon.stub(mkdirp, 'sync').throws(this.mkdirpError);
           });
 
           afterEach(function () {
-            fs.readdirSync.restore();
+            mkdirp.sync.restore();
 
-            delete this.fsReaddirError;
+            delete this.mkdirpError;
           });
 
           it('throws an error', function () {
             swallow(function () { cpr.sync(this.src, this.dest); }.bind(this));
 
-            cpr.sync.should.have.thrown(this.fsReaddirError);
+            cpr.sync.should.have.thrown(this.mkdirpError);
           });
 
         });
 
-        describe('and reading source directory succeeds', function () {
+        describe('and destination directory creation succeeds', function () {
 
-          describe('and directory has no files', function () {
+          beforeEach(function () {
+            sinon.stub(mkdirp, 'sync').returns();
+          });
+
+          afterEach(function () {
+            mkdirp.sync.restore();
+          });
+
+          describe('and reading source directory fails', function () {
 
             beforeEach(function () {
-              this.files = [];
-              sinon.stub(fs, 'readdirSync').returns(this.files);
+              this.fsReaddirError = new Error('fs.readdir fail fail fail');
+              sinon.stub(fs, 'readdirSync').throws(this.fsReaddirError);
             });
 
             afterEach(function () {
               fs.readdirSync.restore();
 
-              delete this.files;
+              delete this.fsReaddirError;
             });
 
-            it('returns undefined', function () {
-              cpr.sync(this.src, this.dest);
+            it('throws an error', function () {
+              swallow(function () { cpr.sync(this.src, this.dest); }.bind(this));
 
-              should.not.exist(cpr.cpr(this.src, this.dest));
+              cpr.sync.should.have.thrown(this.fsReaddirError);
             });
 
           });
 
-          describe('and directory has a file', function () {
+          describe('and reading source directory succeeds', function () {
 
-            beforeEach(function () {
-              this.files = [ 'testfile' ];
-              this.fileSrc = path.join(this.src, 'testfile');
-              this.fileDest = path.join(this.dest, 'testfile');
-
-              sinon.stub(fs, 'readdirSync').returns(this.files);
-
-              this.fstat = { isDirectory: sinon.stub() };
-              sinon.stub(fs, 'statSync')
-                   .withArgs(this.fileSrc)
-                   .returns(this.fstat);
-            });
-
-            afterEach(function () {
-              fs.readdirSync.restore();
-              fs.statSync.restore();
-
-              delete this.files;
-              delete this.fileSrc;
-              delete this.fileDest;
-              delete this.fstat;
-            });
-
-            describe('and file is not a directory', function () {
+            describe('and directory has no files', function () {
 
               beforeEach(function () {
-                this.fstat.isDirectory.returns(false);
-
-                sinon.stub(fs, 'readFileSync');
-                sinon.stub(fs, 'writeFileSync');
+                this.files = [];
+                sinon.stub(fs, 'readdirSync').returns(this.files);
               });
 
               afterEach(function () {
-                fs.readFileSync.restore();
-                fs.writeFileSync.restore();
+                fs.readdirSync.restore();
+
+                delete this.files;
               });
 
-              describe('and file copy fails', function () {
+              it('returns undefined', function () {
+                cpr.sync(this.src, this.dest);
+
+                should.not.exist(cpr.cpr(this.src, this.dest));
+              });
+
+            });
+
+            describe('and directory has a file', function () {
+
+              beforeEach(function () {
+                this.files = [ 'testfile' ];
+                this.fileSrc = path.join(this.src, 'testfile');
+                this.fileDest = path.join(this.dest, 'testfile');
+
+                sinon.stub(fs, 'readdirSync').returns(this.files);
+
+                this.fstat = { isDirectory: sinon.stub() };
+                sinon.stub(fs, 'statSync')
+                     .withArgs(this.fileSrc)
+                     .returns(this.fstat);
+              });
+
+              afterEach(function () {
+                fs.readdirSync.restore();
+                fs.statSync.restore();
+
+                delete this.files;
+                delete this.fileSrc;
+                delete this.fileDest;
+                delete this.fstat;
+              });
+
+              describe('and file is not a directory', function () {
 
                 beforeEach(function () {
-                  this.cpError = new Error('cp read fail fail fail');
+                  this.fstat.isDirectory.returns(false);
+
+                  sinon.stub(fs, 'readFileSync');
+                  sinon.stub(fs, 'writeFileSync');
                 });
 
                 afterEach(function () {
-                  delete this.cpError;
+                  fs.readFileSync.restore();
+                  fs.writeFileSync.restore();
                 });
 
-                describe('due to failed file read', function () {
+                describe('and file copy fails', function () {
 
                   beforeEach(function () {
-                    fs.readFileSync.withArgs(this.fileSrc, 'utf8')
-                                   .throws(this.cpError);
-                  });
-
-                  it('throws an error', function () {
-                    swallow(function () {
-                      cpr.sync(this.src, this.dest);
-                    }.bind(this));
-
-                    cpr.sync.should.have.thrown(this.cpError);
-                  });
-
-                });
-
-                describe('due to failed file write', function () {
-
-                  beforeEach(function () {
-                    this.readString = sinon.stub();
-                    fs.readFileSync.withArgs(this.fileSrc, 'utf8')
-                                   .returns(this.readString);
-
-                    fs.writeFileSync.withArgs(this.fileDest, this.readString, 'utf8')
-                                    .throws(this.cpError);
+                    this.cpError = new Error('cp read fail fail fail');
                   });
 
                   afterEach(function () {
-                    delete this.readString;
+                    delete this.cpError;
+                  });
+
+                  describe('due to failed file read', function () {
+
+                    beforeEach(function () {
+                      fs.readFileSync.withArgs(this.fileSrc, 'utf8')
+                                     .throws(this.cpError);
+                    });
+
+                    it('throws an error', function () {
+                      swallow(function () {
+                        cpr.sync(this.src, this.dest);
+                      }.bind(this));
+
+                      cpr.sync.should.have.thrown(this.cpError);
+                    });
+
+                  });
+
+                  describe('due to failed file write', function () {
+
+                    beforeEach(function () {
+                      this.readString = sinon.stub();
+                      fs.readFileSync.withArgs(this.fileSrc, 'utf8')
+                                     .returns(this.readString);
+
+                      fs.writeFileSync.withArgs(this.fileDest, this.readString, 'utf8')
+                                      .throws(this.cpError);
+                    });
+
+                    afterEach(function () {
+                      delete this.readString;
+                    });
+
+                    it('throws an error', function () {
+                      swallow(function () {
+                        cpr.sync(this.src, this.dest);
+                      }.bind(this));
+
+                      cpr.sync.should.have.thrown(this.cpError);
+                    });
+
+                  });
+
+                });
+
+                describe('and file copy succeeds', function () {
+
+                  beforeEach(function () {
+                    fs.readFileSync.withArgs(this.fileSrc, 'utf8')
+                                   .returns(this.readString);
+                    fs.writeFileSync.withArgs(this.fileDest, this.readString, 'utf8')
+                                    .returns();
+                  });
+
+                  it('returns undefined', function () {
+                    should.not.exist(cpr.sync(this.src, this.dest));
+                  });
+
+                });
+
+              });
+
+              describe('and file is a directory', function () {
+
+                beforeEach(function () {
+                  this.fstat.isDirectory.returns(true);
+
+                  this._cpr = cpr.sync;
+                  cpr.sync.restore();
+                  sinon.stub(cpr, 'sync');
+                });
+
+                afterEach(function () {
+                  delete this._cpr;
+                });
+
+                describe('and directory copy fails', function () {
+
+                  beforeEach(function () {
+                    this.cprError = new Error('cpr fail fail fail');
+                    cpr.sync.withArgs(this.fileSrc, this.fileDest)
+                            .throws(this.cprError);
+                  });
+
+                  afterEach(function () {
+                    delete this.cprError;
                   });
 
                   it('throws an error', function () {
                     swallow(function () {
-                      cpr.sync(this.src, this.dest);
+                      this._cpr(this.src, this.dest);
                     }.bind(this));
 
-                    cpr.sync.should.have.thrown(this.cpError);
+                    this._cpr.should.have.thrown(this.cprError);
                   });
 
                 });
 
-              });
+                describe('and directory copy succeeds', function () {
 
-              describe('and file copy succeeds', function () {
+                  beforeEach(function () {
+                    cpr.sync.withArgs(this.fileSrc, this.fileDest)
+                            .returns();
+                  });
 
-                beforeEach(function () {
-                  fs.readFileSync.withArgs(this.fileSrc, 'utf8')
-                                 .returns(this.readString);
-                  fs.writeFileSync.withArgs(this.fileDest, this.readString, 'utf8')
-                                  .returns();
-                });
+                  it('recursively copies file directory', function () {
+                    should.not.exist(this._cpr(this.src, this.dest));
+                  });
 
-                it('returns undefined', function () {
-                  should.not.exist(cpr.sync(this.src, this.dest));
-                });
-
-              });
-
-            });
-
-            describe('and file is a directory', function () {
-
-              beforeEach(function () {
-                this.fstat.isDirectory.returns(true);
-
-                this._cpr = cpr.sync;
-                cpr.sync.restore();
-                sinon.stub(cpr, 'sync');
-              });
-
-              afterEach(function () {
-                delete this._cpr;
-              });
-
-              describe('and directory copy fails', function () {
-
-                beforeEach(function () {
-                  this.cprError = new Error('cpr fail fail fail');
-                  cpr.sync.withArgs(this.fileSrc, this.fileDest)
-                          .throws(this.cprError);
-                });
-
-                afterEach(function () {
-                  delete this.cprError;
-                });
-
-                it('throws an error', function () {
-                  swallow(function () {
-                    this._cpr(this.src, this.dest);
-                  }.bind(this));
-
-                  this._cpr.should.have.thrown(this.cprError);
-                });
-
-              });
-
-              describe('and directory copy succeeds', function () {
-
-                beforeEach(function () {
-                  cpr.sync.withArgs(this.fileSrc, this.fileDest)
-                          .returns();
-                });
-
-                it('recursively copies file directory', function () {
-                  should.not.exist(this._cpr(this.src, this.dest));
                 });
 
               });

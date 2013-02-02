@@ -10,7 +10,7 @@ executable = (function () {
 
   var OPTIONS = [
     {
-      'v': checkVersion
+      'V': checkVersion
     , 'version': checkVersion
     }
   , {

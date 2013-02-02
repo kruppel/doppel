@@ -1,0 +1,101 @@
+#!/usr/bin/env node
+
+var _ = require('underscore')
+  , argv = require('optimist').argv
+  , doppel = require('./../lib/doppel')
+  , pkg = require('./../package.json')
+  , executable;
+
+executable = (function () {
+
+  var OPTIONS = [
+    {
+      'v': checkVersion
+    , 'version': checkVersion
+    }
+  , {
+      'd': setEngineData
+    , 'data': setEngineData
+    , 'x': setEngineExtension
+    , 'extension': setEngineExtension
+    }
+  , {
+      'e': setEngine
+    , 'engine': setEngine
+    }
+  ];
+
+  function checkVersion() {
+    console.log(pkg.version);
+
+    process.exit(0);
+  }
+
+  function setEngine(engine) {
+    this._engine = engine;
+  }
+
+  function setEngineData(val) {
+    try {
+      this._opts.data = JSON.parse(val);
+    }
+    catch (e) {
+      this._opts = fs.readFileSync(val);
+    }
+  }
+
+  function setEngineExtension(ext) {
+    this._opts.extension = ext;
+  }
+
+  return {
+
+    parse: function () {
+      var paths = [].slice.call(argv._);
+
+      this._verbose = argv.verbose;
+
+      _.each(OPTIONS, function (set) {
+        _.each(set, function (fn, option) {
+          var val = argv[option];
+
+          if (val) {
+            fn.call(this, val);
+          }
+        }.bind(this));
+      }.bind(this));
+
+      this.src = paths.shift();
+      this.dest = paths.shift();
+    }
+
+  , run: function (callback) {
+      this._opts = {};
+      this._engine = 'underscore';
+
+      this.parse();
+
+      doppel.use(this._engine, this._opts);
+      doppel(this.src, this.dest, this.data, callback);
+    }
+
+  };
+
+}());
+
+try {
+  executable.run(function (err) {
+    if (err) {
+      console.error(err.message || err.stack);
+
+      process.exit(1);
+    }
+
+    process.exit(0);
+  });
+}
+catch (e) {
+  console.error(e.message || e.stack);
+
+  process.exit(1);
+}

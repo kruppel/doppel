@@ -40,7 +40,7 @@ describe('[unit] cpr', function () {
       it('calls back with error', function (done) {
         cpr.cpr(this.src, this.dest, function () {
           [].slice.call(arguments)[0].message.should.eql(
-            this.src + ' does not exist.'
+            'Source path ' + this.src + ' does not exist.'
           );
 
           done();

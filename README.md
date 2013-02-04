@@ -18,6 +18,18 @@ From the command line (assumes a global install):
 ```sh
 $ doppel -e handlebars -x hbs -d '{ "itis": { "getting": { "hot": "in
 hurrr" } } }' my/source/dir put/compiled/copy/in/here
+
+$ doppel --help
+usage: doppel -d context source_dir destination_dir
+       doppel -F context_file source_dir destination_dir
+
+Options:
+  -d, --data       Sets template data (via JSON string)
+  -F, --file       Sets template data (via input file)
+  -x, --extension  Sets template file extension
+  -e, --engine     Sets template engine [default: "underscore"]
+  -V, --version    Prints doppel version
+  --help           Displays help information
 ```
 
 Node.js:

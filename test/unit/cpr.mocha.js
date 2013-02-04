@@ -4,8 +4,7 @@ var format = require('util').format
   , sinon = require('sinon')
   , should = require('chai').should()
   , swallow = require('./../shared').swallow
-  , InvalidSrcError = require('./../../lib/errors/invalid_src')
-  , IdenticalDirsError = require('./../../lib/errors/identical_dirs')
+  , errors = require('./../../lib/errors')
   , commands = require('./../../lib/commands')
   , cpr = require('./../../lib/cpr');
 
@@ -31,6 +30,20 @@ describe('[unit] cpr', function () {
       this.fsExistsStub.restore();
 
       delete this.fsExistsStub;
+    });
+
+    describe('when a destination directory is not passed', function () {
+
+      it('calls back with error', function (done) {
+        cpr.cpr(this.src, undefined, function () {
+          [].slice.call(arguments)[0].message.should.equal(
+            'Destination path must be provided.'
+          );
+
+          done();
+        });
+      });
+
     });
 
     describe('when a source directory is not passed', function () {
@@ -464,12 +477,20 @@ describe('[unit] cpr', function () {
       fs.existsSync.restore();
     });
 
+    describe('when a destination directory is not passed', function () {
+
+      it('throws an error', function () {
+        (function () { cpr.sync(this.src, undefined); }.bind(this))
+          .should.throw(errors.InvalidDest);
+      });
+
+    });
+
     describe('when a source directory is not passed', function () {
 
       it('throws an error', function () {
-        swallow(function () { cpr.sync(undefined, this.dest); }.bind(this));
-
-        cpr.sync.should.throw(InvalidSrcError);
+        (function () { cpr.sync(undefined, this.dest); }.bind(this))
+          .should.throw(errors.InvalidSrc);
       });
 
     });
@@ -482,7 +503,7 @@ describe('[unit] cpr', function () {
 
       it('throws an error', function () {
         (function () { cpr.sync(this.src, this.dest); }.bind(this))
-          .should.throw(InvalidSrcError);
+          .should.throw(errors.InvalidSrc);
       });
 
     });
@@ -497,7 +518,7 @@ describe('[unit] cpr', function () {
 
         it('throws an error', function () {
           (function () { cpr.sync(this.src, this.src); }.bind(this))
-            .should.throw(IdenticalDirsError);
+            .should.throw(errors.IdenticalDirs);
         });
 
       });

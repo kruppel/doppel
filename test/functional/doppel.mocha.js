@@ -1,4 +1,5 @@
-var path = require('path')
+var fs = require('fs')
+  , path = require('path')
   , util = require('util')
   , _ = require('underscore')
   , handlebars = require('handlebars')
@@ -48,6 +49,147 @@ options = {
 };
 
 describe('[functional] doppel', function () {
+
+  describe('when an engine is not set', function () {
+
+    beforeEach(function () {
+      this.root = path.resolve(__dirname, '..', '..');
+      this.modified = fs.lstatSync(this.root).mtime;
+    });
+
+    afterEach(function () {
+      delete this.root;
+      delete this.modified;
+    });
+
+    it('calls back with error', function (done) {
+      doppel(undefined, undefined, data, function (err) {
+        err.message.should.match(
+          /`doppel.use` must be called with a supported template engine/
+        );
+
+        done();
+      });
+    });
+
+    it('does not make any file changes', function (done) {
+      doppel(undefined, undefined, data, function (err) {
+        fs.lstat(this.root, function (err, stats) {
+          stats.mtime.should.eql(this.modified);
+
+          done();
+        }.bind(this));
+      }.bind(this));
+    });
+
+  });
+
+  describe('when not passed', function () {
+
+    beforeEach(function () {
+      this.root = path.resolve(__dirname, '..', '..');
+      this.modified = fs.lstatSync(this.root).mtime;
+
+      doppel.use('underscore');
+    });
+
+    afterEach(function () {
+      delete this.root;
+      delete this.modified;
+    });
+
+    describe('a source directory', function () {
+
+      beforeEach(function () {
+        this.dest = path.join(this.root, 'tmp');
+      });
+
+      afterEach(function () {
+        delete this.dest;
+      });
+
+      it('calls back with an invalid source error', function (done) {
+        doppel(undefined, this.dest, data, function (err) {
+          err.message.should.equal('Source path must be provided.');
+
+          done();
+        });
+      });
+
+      it('does not make any file changes', function (done) {
+        doppel(undefined, this.dest, data, function (err) {
+          fs.lstat(this.root, function (err, stats) {
+            stats.mtime.should.eql(this.modified);
+
+            done();
+          }.bind(this));
+        }.bind(this));
+      });
+
+    });
+
+    describe('a nonexistent source directory', function () {
+
+      beforeEach(function () {
+        this.src = 'this/path/should/never/ever/exist/please';
+        this.dest = path.join(this.root, 'tmp');
+      });
+
+      afterEach(function () {
+        delete this.src;
+        delete this.dest;
+      });
+
+      it('calls back with an invalid source error', function (done) {
+        doppel(this.src, this.dest, data, function (err) {
+          err.message.should.match(
+            new RegExp(
+              util.format(
+                'Source path .*%s does not exist.'
+              , this.src
+              )
+            )
+          );
+
+          done();
+        }.bind(this));
+      });
+
+      it('does not make any file changes', function (done) {
+        doppel(this.src, this.dest, data, function (err) {
+          fs.lstat(this.root, function (err, stats) {
+            stats.mtime.should.eql(this.modified);
+
+            done();
+          }.bind(this));
+        }.bind(this));
+      });
+
+    });
+
+    describe('a destination directory', function () {
+
+      it('calls back with an invalid destination error', function (done) {
+        doppel(expected.base, undefined, data, function (err) {
+          err.message.should.equal('Destination path must be provided.');
+
+          done();
+        });
+      });
+
+      it('does not make any file changes', function (done) {
+        doppel(expected.base, undefined, data, function (err) {
+          fs.lstat(this.root, function (err, stats) {
+            stats.mtime.should.eql(this.modified);
+
+            done();
+          }.bind(this));
+        }.bind(this));
+      });
+
+    });
+
+  });
 
   _.each(engines, function (engine, name, index) {
 

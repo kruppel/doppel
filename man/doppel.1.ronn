@@ -5,25 +5,28 @@ doppel(1) -- copy and compile template directories
 
   `doppel` [`-V`|`--version`]
 
-  `doppel` [`-v`|`--verbose`] [`-d`|`--data` <context>] [options] <source> <destination>
+  `doppel` [`-d`|`--data` <context>] [options] <source> <destination>
+
+  `doppel` [`-F`|`--file` <context_file>] [options] <source> <destination>
 
 ## DESCRIPTION
 
 **Doppel** recursively copies files from a given directory and compiles all
 templates in the directory copy.
 
+Data to interpolate into the directory templates must either be provided via
+the `d|--data` or `F|--file` flags.
+
 ## OPTIONS
 
   * `-V`, `--version`:
     Prints the current `doppel` version.
 
-  * `-v`, `--verbose`:
-    Useful for debugging, the verbose flag sets the `doppel` logging level to
-    debug mode.
-
   * `-d`, `--data` <context>:
-    [required] Data/context to interpolate into the templates. Acceptable
-    arguments are a valid JSON string or a JSON filename.
+    [required] Data/context to interpolate into the templates.
+
+  * `-F`, `--file` <context_file>:
+    [required] Input file with data/content to interpolate into the templates.
 
   * `-e`, `--engine` <engine>:
     Template engine for compiling templates. By default, `doppel` uses

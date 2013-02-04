@@ -1,90 +1,74 @@
 #!/usr/bin/env node
 
-var _ = require('underscore')
-  , argv = require('optimist').argv
+var fs = require('fs')
+  , path = require('path')
+  , _ = require('underscore')
+  , optimist = require('optimist')
   , doppel = require('./../lib/doppel')
   , pkg = require('./../package.json')
   , executable;
 
-executable = (function () {
+exec = function (callback) {
+  var argv
+    , data
+    , paths;
 
-  var OPTIONS = [
-    {
-      'V': checkVersion
-    , 'version': checkVersion
+  optimist.usage(
+    'usage: $0 -d context source_dir destination_dir\n' +
+    '       $0 -F context_file source_dir destination_dir'
+  );
+  argv = optimist.options({
+    'd': {
+      describe: 'Sets template data (via JSON string).'
+    , alias: 'data'
     }
-  , {
-      'd': setEngineData
-    , 'data': setEngineData
-    , 'x': setEngineExtension
-    , 'extension': setEngineExtension
+  , 'F': {
+      describe: 'Sets template data (via input file).'
+    , alias: 'file'
     }
-  , {
-      'e': setEngine
-    , 'engine': setEngine
+  , 'x': {
+      describe: 'Sets template file extension.'
+    , alias: 'extension'
     }
-  ];
+  , 'e': {
+      describe: 'Sets template engine.'
+    , alias: 'engine'
+    , default: 'underscore'
+    }
+  , 'V': {
+      describe: 'Prints doppel version.'
+    , alias: 'version'
+    }
+  , 'help': {
+      describe: 'Displays help information'
+    }
+  }).demand(2).argv;
 
-  function checkVersion() {
+  if (argv.help) {
+    optimist.showHelp();
+
+    callback();
+  }
+  else if (argv.version) {
     console.log(pkg.version);
 
-    process.exit(0);
+    callback();
   }
 
-  function setEngine(engine) {
-    this._engine = engine;
+  data = argv.data ? JSON.parse(argv.data) :
+    argv.file ? require(path.join(process.cwd(), argv.file)) : undefined;
+  if (!data) {
+    callback(new Error('Template data must be provided!'));
   }
 
-  function setEngineData(val) {
-    try {
-      this._opts.data = JSON.parse(val);
-    }
-    catch (e) {
-      this._opts = fs.readFileSync(val);
-    }
-  }
+  paths = argv._;
 
-  function setEngineExtension(ext) {
-    this._opts.extension = ext;
-  }
-
-  return {
-
-    parse: function () {
-      var paths = [].slice.call(argv._);
-
-      this._verbose = argv.verbose;
-
-      _.each(OPTIONS, function (set) {
-        _.each(set, function (fn, option) {
-          var val = argv[option];
-
-          if (val) {
-            fn.call(this, val);
-          }
-        }.bind(this));
-      }.bind(this));
-
-      this.src = paths.shift();
-      this.dest = paths.shift();
-    }
-
-  , run: function (callback) {
-      this._opts = {};
-      this._engine = 'underscore';
-
-      this.parse();
-
-      doppel.use(this._engine, this._opts);
-      doppel(this.src, this.dest, this.data, callback);
-    }
-
-  };
-
-}());
+  doppel.use(argv.engine, { extension: argv.extension });
+  doppel(paths[0], paths[1], data, callback);
+};
 
 try {
-  executable.run(function (err) {
+  exec(function (err) {
     if (err) {
       console.error(err.message || err.stack);
 
@@ -95,7 +79,7 @@ try {
   });
 }
 catch (e) {
-  console.error(e.message || e.stack);
+  console.error(e.stack);
 
   process.exit(1);
 }

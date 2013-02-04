@@ -10,10 +10,16 @@
 \fBdoppel\fR [\fB\-V\fR|\fB\-\-version\fR]
 .
 .P
-\fBdoppel\fR [\fB\-v\fR|\fB\-\-verbose\fR] \fI\fB\-d\fR|\fB\-\-data\fR \fIcontext\fR\fR \fIsource\fR \fIdestination\fR
+\fBdoppel\fR \fI\fB\-d\fR|\fB\-\-data\fR \fIcontext\fR\fR \fIsource\fR \fIdestination\fR
+.
+.P
+\fBdoppel\fR \fI\fB\-F\fR|\fB\-\-file\fR \fIcontext_file\fR\fR \fIsource\fR \fIdestination\fR
 .
 .SH "DESCRIPTION"
 \fBDoppel\fR recursively copies files from a given directory and compiles all templates in the directory copy\.
+.
+.P
+Data to interpolate into the directory templates must either be provided via the \fBd|\-\-data\fR or \fBF|\-\-file\fR flags\.
 .
 .SH "OPTIONS"
 .
@@ -22,12 +28,12 @@
 Prints the current \fBdoppel\fR version\.
 .
 .TP
-\fB\-v\fR, \fB\-\-verbose\fR
-Useful for debugging, the verbose flag sets the \fBdoppel\fR logging level to debug mode\.
+\fB\-d\fR, \fB\-\-data\fR \fIcontext\fR
+[required] Data/context to interpolate into the templates\.
 .
 .TP
-\fB\-d\fR, \fB\-\-data\fR \fIcontext\fR
-[required] Data/context to interpolate into the templates\. Acceptable arguments are a valid JSON string or a JSON filename\.
+\fB\-F\fR, \fB\-\-file\fR \fIcontext_file\fR
+[required] Input file with data/content to interpolate into the templates\.
 .
 .TP
 \fB\-e\fR, \fB\-\-engine\fR \fIengine\fR

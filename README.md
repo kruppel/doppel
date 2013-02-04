@@ -3,19 +3,24 @@ doppel -- Copy and compile a directory template
 
 ## Synopsis
 
-Boilerplate sucks. Writing it by hand sucks even more. Take the pain out
-by copying and compiling a directory template. A quick "doppel" and
-presto, it's done.
+Doppel is a simple Node.js module to copy and compile a directory template.
 
-Brought to you by [Sherpa](http://www.sherpa.io).
-
-### Supported template libraries
+### Supported template engines
 
   * [Handlebars](http://handlebarsjs.com)
   * [underscore](http://underscorejs.org)
 
 
 ## Example
+
+From the command line (assumes a global install):
+
+```sh
+$ doppel -e handlebars -x hbs -d '{ "itis": { "getting": { "hot": "in
+hurrr" } } }' my/source/dir put/compiled/copy/in/here
+```
+
+Node.js:
 
 ```javascript
 // Data to interpolate
@@ -51,6 +56,13 @@ npm install doppel
 
 ```
 npm uninstall doppel
+```
+
+
+## Testing
+
+```
+make test
 ```
 
 

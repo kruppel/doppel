@@ -44,8 +44,3 @@ templates in the directory copy.
 
     `handlebars`: `handlebars`
 
-  * `-f`, `--force`:
-    To be safe, `doppel` errors when the destination directory already exists.
-    Passing the force flag will override this behavior, force writing over the
-    destination directory.
-

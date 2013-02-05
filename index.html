@@ -1,0 +1,169 @@
+<!DOCTYPE html>
+<html>
+  <head>
+    <meta charset="utf-8">
+    <title>Doppel</title>
+    <meta name="description" content="Doppel: Copy and compile templates.">
+    <meta name="author" content="Kurt Ruppel and Steve Lloyd">
+    <meta name="viewport" content="initial-scale=1, maximum-scale=1, user-scalable=no">
+    <link rel="shortcut icon" type="image/x-icon" href="favicon.ico"/>
+    <link rel="stylesheet" href="css/doppel.css">
+
+    <script type="text/javascript" src="js/highlight.min.js"></script>
+    <script type="text/javascript">
+      hljs.initHighlightingOnLoad()
+/*
+      var _gaq = _gaq || [];
+      _gaq.push(['_setAccount', 'UA-36050008-1']);
+      _gaq.push(['_trackPageview']);
+
+      (function() {
+        var ga = document.createElement('script'); ga.type = 'text/javascript'; ga.async = true;
+        ga.src = ('https:' == document.location.protocol ? 'https://ssl' : 'http://www') + '.google-analytics.com/ga.js';
+        var s = document.getElementsByTagName('script')[0]; s.parentNode.insertBefore(ga, s);
+      })();
+*/
+    </script>
+
+  </head>
+  <body>
+
+    <div class="container">
+      <header class="masthead">
+        <span>doppel</span>
+        <h1>Copy and compile template directories.</h1>
+      </header>
+
+      <section class="source">
+        <a class="btn" href="https://github.com/potif/doppel" target="_blank">View on GitHub</a>
+      </section>
+
+      <section id="usage">
+        <h2><a href="#usage">Usage</a></h2>
+        <pre><code class="bash">$ doppel --help
+usage: doppel -d context source_dir destination_dir
+       doppel -F context_file source_dir destination_dir
+
+Options:
+  -d, --data       Sets template data (via JSON string)
+  -F, --file       Sets template data (via input file)
+  -x, --extension  Sets template file extension
+  -e, --engine     Sets template engine [default: "underscore"]
+  -V, --version    Prints doppel version
+  --help           Displays help information</code></pre>
+      </section>
+
+      <section id="engines">
+        <h2><a href="#engines">Supported engines</a></h2>
+        <table>
+          <tbody>
+            <tr>
+              <th>engine name</th>
+              <th>default extension</th>
+            </tr>
+            <tr>
+              <td><a href="http://handlebarsjs.com" target="_blank">handlebars</a></td>
+              <td><code>handlebars</code></td>
+            </tr>
+            <tr>
+              <td><a href="http://underscorejs.org">underscore</a></td>
+              <td><code>jst</code></td>
+            </tr>
+          </tbody>
+        </table>
+      </section>
+
+      <section id="api">
+        <h2><a href="#api">API</a></h2>
+        <ul class="methods">
+          <li id="api-doppel" class="method">
+            <h3><a href="#api-doppel">doppel(src, destination, data, callback)</a></h3>
+            <p>Entry point for "doppel"-ing directories.</p>
+            <div class="arguments">
+              <h4>arguments</h4>
+              <ul>
+                <li>
+                  <h5>src <i>string</i></h5>
+                  <p>Source directory. A directory with templates-to-compile should be at this location.</p>
+                </li>
+                <li>
+                  <h5>destination <i>string</i></h5>
+                  <p>Destination directory. The location of the compiled copy.</p>
+                  <p><em>NOTE: As of now, an existing directory will be overwritten if passed in this argument.</em></p>
+                </li>
+                <li>
+                  <h5>data <i>object</i></h5>
+                  <p>Context to interpolate into templates.</p>
+                </li>
+                <li>
+                  <h5>callback <i>function</i></h5>
+                  <p>Callback function. Function is invoked with arguments <code>err</code>, following the <a href="http://en.wikipedia.org/wiki/Continuation-passing_style" target="_blank">CPS convention</a>.</p>
+                </li>
+              </ul>
+            </div>
+            <div class="example">
+              <h4>example</h4>
+              <pre class="javascript"><code>var callback = function (err) {
+  if (err) throw new Error('F bombs');
+
+  console.log('Not with a ! but with a whimper');
+};
+
+var data = {
+  title: 'The Hollow Men'
+, doctype: 'html'
+, description: 'Not to be confused with Hollow Man'
+, author: 'T.S. Eliot'
+};
+
+console.log('This is the way the world ends');
+// Set the template engine
+doppel.use('underscore');
+// Pile o' copy
+doppel('/templates/html', 'hollow_men', data, callback);</code></pre>
+            </div>
+          </li>
+          <li id="api-doppel-use" class="method">
+            <h3><a href="#api-doppel-use">doppel.use(engine, [options])</a></h3>
+            <p>Configures the doppel template engine.</p>
+            <div class="arguments">
+              <h4>arguments</h4>
+              <ul>
+                <li>
+                  <h5>engine <i>string</i></h5>
+                  <p>Template engine to use. Accepted values are <a href="#engines">listed above</a>.</p>
+                </li>
+                <li>
+                  <h5>[options] <i>object</i></h5>
+                  <p>Optional settings for template engine.</p>
+                  <ul class="options">
+                    <li>
+                      <h6>extension <i>string</i></h6>
+                      <p>Sets the template file extension. Useful for overriding an engine's <a href="#engines">default extension.</a></p>
+                    </li>
+                  </ul>
+                </li>
+              </ul>
+            </div>
+            <div class="example">
+              <h4>example</h4>
+              <pre class="javascript"><code>doppel.use('handlebars', { extension: 'hbs' });</code></pre>
+            </div>
+          </li>
+        </ul>
+      </section>
+
+      <section id="acknowledgements">
+        <h2><a href="#acknowledgements">Acknowledgements</a></h2>
+        <p>Brought to you by <a href="https://github.com/kruppel" target="_blank">Kurt Ruppel</a> and <a href="https://github.com/repeatingbeats" target="_blank">Steve Lloyd</a>.
+      </section>
+
+      <footer class="footer">
+        <p class="license">
+          Code licensed under the <a href="http://opensource.org/licenses/MIT" target="_blank">MIT License</a>.
+        </p>
+      </footer>
+    </div>
+
+  </body>
+</html>

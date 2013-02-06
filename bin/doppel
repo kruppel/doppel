@@ -47,23 +47,25 @@ exec = function (callback) {
   if (argv.help) {
     optimist.showHelp();
 
-    callback();
+    return callback();
   }
   else if (argv.version) {
     console.log(pkg.version);
 
-    callback();
+    return callback();
   }
 
   paths = argv._;
   if (paths.length < 2) {
-    callback(new Error('Source and destination directories must be provided.'));
+    return callback(
+      new Error('Source and destination directories must be provided.')
+    );
   }
 
   data = argv.data ? JSON.parse(argv.data) :
     argv.file ? require(path.join(process.cwd(), argv.file)) : undefined;
   if (!data) {
-    callback(new Error('Template data must be provided.'));
+    return callback(new Error('Template data must be provided.'));
   }
 
   doppel.use(argv.engine, { extension: argv.extension });

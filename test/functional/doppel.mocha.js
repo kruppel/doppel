@@ -10,7 +10,7 @@ var fs = require('fs')
   , engines = require('./../../lib/engines')
   , fixtures = require('./../fixtures')
   , expected = fixtures.expected
-  , engineered = fixtures.engines
+  , engineered = fixtures.actual.engines
   , assertions = require('./../assertions')
   , options
   , data;
@@ -191,56 +191,85 @@ describe('[functional] doppel', function () {
 
   });
 
-  _.each(engines, function (engine, name, index) {
+  describe('for a source directory', function () {
 
-    var targets = engineered[name];
+    before(function (ready) {
+      this.tmp = path.resolve(__dirname, '..', '..', 'tmp');
 
-    describe('for a source directory of \'' + name + '\' templates', function () {
+      mkdirp(this.tmp, ready);
+    });
 
-      before(function () {
-        this.options = options[name];
+    after(function () {
+      delete this.tmp;
+    });
 
-        this.setup = this.options.setup;
-        this.teardown = this.options.teardown;
-        this.tmp = path.resolve(__dirname, '..', '..', 'tmp');
+    _.each(engines, function (engine, name, index) {
 
-        this.setup && this.setup();
-      });
+      var targets = engineered[name];
 
-      after(function (finish) {
-        this.teardown && this.teardown();
-        rimraf(path.join(this.tmp, name), finish);
+      describe('of \'' + name + '\' templates', function () {
 
-        delete this.options;
-        delete this.setup;
-        delete this.teardown;
-        delete this.tmp;
-      });
+        before(function () {
+          this.options = options[name];
 
-      beforeEach(function () {
-        doppel.use(name);
-      });
+          this.setup = this.options.setup;
+          this.teardown = this.options.teardown;
 
-      _.each(targets, function (target, type) {
+          this.setup && this.setup();
+        });
 
-        describe('of type \'' + type + '\'', function () {
+        after(function () {
+          this.teardown && this.teardown();
 
-          beforeEach(function (ready) {
-            this.dest = path.join(this.tmp, name, type);
+          delete this.options;
+          delete this.setup;
+          delete this.teardown;
+        });
 
-            mkdirp(this.dest, ready);
-          });
+        beforeEach(function () {
+          doppel.use(name);
+        });
 
-          it('creates a compiled copy of the directory', function (done) {
-            var self = this;
+        _.each(targets, function (target, type) {
 
-            doppel(target, this.dest, data, function (err) {
-              assertions.assertDirsEqual(expected[type], self.dest, function (err) {
-                if (err) throw err;
+          describe('of type \'' + type + '\'', function () {
 
-                done();
+            var dest = path.join(this.tmp, name, type);
+
+            beforeEach(function () {
+              this.ok = true;
+            });
+
+            afterEach(function (finish) {
+              if (!this.ok) this.test.error(new Error('failed to copy cwd'));
+
+              delete this.ok;
+
+              rimraf(dest, finish);
+            });
+
+            it('creates a compiled copy of the directory', function (done) {
+              var self = this;
+
+              doppel(target, dest, data, function (err) {
+                if (err) {
+                  self.ok = false;
+
+                  return;
+                }
+
+                assertions.assertDirsEqual(expected[type], dest, function (err) {
+                  if (err) {
+                    self.ok = false;
+
+                    return;
+                  }
+
+                  done();
+                });
               });
             });
+
           });
 
         });

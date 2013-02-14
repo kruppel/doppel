@@ -241,7 +241,11 @@ describe('[functional] doppel', function () {
             });
 
             afterEach(function (finish) {
-              if (!this.ok) this.test.error(new Error('failed to copy cwd'));
+              if (!this.ok) {
+                this.test.error(
+                  new Error(util.format('failed to copy %s', name))
+                );
+              }
 
               delete this.ok;
 

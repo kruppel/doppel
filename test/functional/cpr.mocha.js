@@ -121,8 +121,7 @@ describe('[functional] cpr', function () {
 
     describe('for a source directory', function () {
 
-      var name = 'cwd_as_src'
-        , tmp = path.resolve(__dirname, '..', '..', 'tmp');
+      var tmp = path.resolve(__dirname, '..', '..', 'tmp');
 
       before(function (ready) {
         mkdirp(tmp, ready);
@@ -139,7 +138,11 @@ describe('[functional] cpr', function () {
           });
 
           afterEach(function (finish) {
-            if (!this.ok) this.test.error(new Error('failed to copy cwd'));
+            if (!this.ok) {
+              this.test.error(
+                new Error(util.format('failed to copy %s', name))
+              );
+            }
 
             delete this.ok;
 
@@ -174,7 +177,8 @@ describe('[functional] cpr', function () {
 
       describe('@ current working directory', function () {
 
-        var dest = path.join(tmp, name)
+        var name = 'cwd_as_src'
+          , dest = path.join(tmp, name)
           , original = dest + '_original';
 
         beforeEach(function (ready) {
@@ -234,29 +238,95 @@ describe('[functional] cpr', function () {
 
   describe('cpr.sync', function () {
 
-    _.each(expected, function (src, name, index) {
+    var tmp = path.resolve(__dirname, '..', '..', 'tmp');
 
-      var tmp = path.resolve(__dirname, '..', '..', 'tmp')
-        , dest = path.join(tmp, name);
+    describe('for a source directory', function () {
 
-      describe('for a source directory @ \'' + name + '\'', function () {
+      _.each(expected, function (src, name, index) {
+
+        var dest = path.join(tmp, name);
+
+        describe('@ \'' + name + '\'', function () {
+
+          beforeEach(function (ready) {
+            this.ok = true;
+
+            mkdirp(dest, ready);
+          });
+
+          afterEach(function (finish) {
+            if (!this.ok) {
+              this.test.error(
+                new Error(util.format('failed to copy %s', name))
+              );
+            }
+
+            delete this.ok;
+
+            rimraf(path.join(tmp, name), finish);
+          });
+
+          it('creates a compiled copy of the directory', function (done) {
+            cpr.sync(src, dest);
+
+            assertions.assertDirsEqual(src, dest, function (err) {
+              if (err) throw err;
+
+              done();
+            });
+          });
+
+        });
+
+      });
+
+      describe('@ current working directory', function () {
+
+        var name = 'cwd_as_src'
+          , dest = path.join(tmp, name)
+          , original = dest + '_original';
 
         beforeEach(function (ready) {
-          mkdirp(dest, ready);
+          this.cwd = process.cwd();
+          this.ok = true;
+
+          cpr.cpr(fixtures.actual[name], original, function (err) {
+            process.chdir(tmp);
+
+            mkdirp(dest, ready);
+          });
         });
 
         afterEach(function (finish) {
+          process.chdir(this.cwd);
+
+          if (!this.ok) this.test.error(new Error('failed to copy cwd'));
+
+          delete this.cwd;
+          delete this.ok;
+
           rimraf(path.join(tmp, name), finish);
         });
 
-        it('creates a compiled copy of the directory', function (done) {
+        it('creates a copy of cwd', function (done) {
+          var self = this
+            , src = process.cwd();
+
           cpr.sync(src, dest);
 
-          assertions.assertDirsEqual(src, dest, function (err) {
-            if (err) throw err;
+          assertions.assertDirsEqual(
+            original
+          , path.join(dest, name + '_original')
+          , function (err) {
+              if (err) {
+                self.ok = false;
 
-            done();
-          });
+                return;
+              }
+
+              done();
+            }
+          );
         });
 
       });

@@ -1,4 +1,5 @@
-var path = require('path')
+var fs = require('fs')
+  , path = require('path')
   , util = require('util')
   , _ = require('underscore')
   , handlebars = require('handlebars')
@@ -9,7 +10,7 @@ var path = require('path')
   , engines = require('./../../lib/engines')
   , fixtures = require('./../fixtures')
   , expected = fixtures.expected
-  , engineered = fixtures.engines
+  , engineered = fixtures.actual.engines
   , assertions = require('./../assertions')
   , options
   , data;
@@ -49,56 +50,230 @@ options = {
 
 describe('[functional] doppel', function () {
 
-  _.each(engines, function (engine, name, index) {
+  describe('when an engine is not set', function () {
 
-    var targets = engineered[name];
+    beforeEach(function () {
+      this.root = path.resolve(__dirname, '..', '..');
+      this.modified = fs.lstatSync(this.root).mtime;
+    });
 
-    describe('for a source directory of \'' + name + '\' templates', function () {
+    afterEach(function () {
+      delete this.root;
+      delete this.modified;
+    });
 
-      before(function () {
-        this.options = options[name];
+    it('calls back with error', function (done) {
+      doppel(undefined, undefined, data, function (err) {
+        err.message.should.match(
+          /`doppel.use` must be called with a supported template engine/
+        );
 
-        this.setup = this.options.setup;
-        this.teardown = this.options.teardown;
-        this.tmp = path.resolve(__dirname, '..', '..', 'tmp');
-
-        this.setup && this.setup();
+        done();
       });
+    });
 
-      after(function (finish) {
-        this.teardown && this.teardown();
-        rimraf(path.join(this.tmp, name), finish);
+    it('does not make any file changes', function (done) {
+      doppel(undefined, undefined, data, function (err) {
+        fs.lstat(this.root, function (err, stats) {
+          stats.mtime.should.eql(this.modified);
 
-        delete this.options;
-        delete this.setup;
-        delete this.teardown;
-        delete this.tmp;
-      });
+          done();
+        }.bind(this));
+      }.bind(this));
+    });
+
+  });
+
+  describe('when not passed', function () {
+
+    beforeEach(function () {
+      this.root = path.resolve(__dirname, '..', '..');
+      this.modified = fs.lstatSync(this.root).mtime;
+
+      doppel.use('underscore');
+    });
+
+    afterEach(function () {
+      delete this.root;
+      delete this.modified;
+    });
+
+    describe('a source directory', function () {
 
       beforeEach(function () {
-        doppel.use(name);
+        this.dest = path.join(this.root, 'tmp');
       });
 
-      _.each(targets, function (target, type) {
+      afterEach(function () {
+        delete this.dest;
+      });
 
-        describe('of type \'' + type + '\'', function () {
+      it('calls back with an invalid source error', function (done) {
+        doppel(undefined, this.dest, data, function (err) {
+          err.message.should.equal('Source path must be provided.');
 
-          beforeEach(function (ready) {
-            this.dest = path.join(this.tmp, name, type);
+          done();
+        });
+      });
 
-            mkdirp(this.dest, ready);
-          });
+      it('does not make any file changes', function (done) {
+        doppel(undefined, this.dest, data, function (err) {
+          fs.lstat(this.root, function (err, stats) {
+            stats.mtime.should.eql(this.modified);
 
-          it('creates a compiled copy of the directory', function (done) {
-            var self = this;
+            done();
+          }.bind(this));
+        }.bind(this));
+      });
 
-            doppel(target, this.dest, data, function (err) {
-              assertions.assertDirsEqual(expected[type], self.dest, function (err) {
-                if (err) throw err;
+    });
 
-                done();
+    describe('a nonexistent source directory', function () {
+
+      beforeEach(function () {
+        this.src = 'this/path/should/never/ever/exist/please';
+        this.dest = path.join(this.root, 'tmp');
+      });
+
+      afterEach(function () {
+        delete this.src;
+        delete this.dest;
+      });
+
+      it('calls back with an invalid source error', function (done) {
+        doppel(this.src, this.dest, data, function (err) {
+          err.message.should.match(
+            new RegExp(
+              util.format(
+                'Source path .*%s does not exist.'
+              , this.src
+              )
+            )
+          );
+
+          done();
+        }.bind(this));
+      });
+
+      it('does not make any file changes', function (done) {
+        doppel(this.src, this.dest, data, function (err) {
+          fs.lstat(this.root, function (err, stats) {
+            stats.mtime.should.eql(this.modified);
+
+            done();
+          }.bind(this));
+        }.bind(this));
+      });
+
+    });
+
+    describe('a destination directory', function () {
+
+      it('calls back with an invalid destination error', function (done) {
+        doppel(expected.base, undefined, data, function (err) {
+          err.message.should.equal('Destination path must be provided.');
+
+          done();
+        });
+      });
+
+      it('does not make any file changes', function (done) {
+        doppel(expected.base, undefined, data, function (err) {
+          fs.lstat(this.root, function (err, stats) {
+            stats.mtime.should.eql(this.modified);
+
+            done();
+          }.bind(this));
+        }.bind(this));
+      });
+
+    });
+
+  });
+
+  describe('for a source directory', function () {
+
+    before(function (ready) {
+      this.tmp = path.resolve(__dirname, '..', '..', 'tmp');
+
+      mkdirp(this.tmp, ready);
+    });
+
+    after(function () {
+      delete this.tmp;
+    });
+
+    _.each(engines, function (engine, name, index) {
+
+      var targets = engineered[name];
+
+      describe('of \'' + name + '\' templates', function () {
+
+        before(function () {
+          this.options = options[name];
+
+          this.setup = this.options.setup;
+          this.teardown = this.options.teardown;
+
+          this.setup && this.setup();
+        });
+
+        after(function () {
+          this.teardown && this.teardown();
+
+          delete this.options;
+          delete this.setup;
+          delete this.teardown;
+        });
+
+        beforeEach(function () {
+          doppel.use(name);
+        });
+
+        _.each(targets, function (target, type) {
+
+          describe('of type \'' + type + '\'', function () {
+
+            var dest = path.join(this.tmp, name, type);
+
+            beforeEach(function () {
+              this.ok = true;
+            });
+
+            afterEach(function (finish) {
+              if (!this.ok) {
+                this.test.error(
+                  new Error(util.format('failed to copy %s', name))
+                );
+              }
+
+              delete this.ok;
+
+              rimraf(dest, finish);
+            });
+
+            it('creates a compiled copy of the directory', function (done) {
+              var self = this;
+
+              doppel(target, dest, data, function (err) {
+                if (err) {
+                  self.ok = false;
+
+                  return;
+                }
+
+                assertions.assertDirsEqual(expected[type], dest, function (err) {
+                  if (err) {
+                    self.ok = false;
+
+                    return;
+                  }
+
+                  done();
+                });
               });
             });
+
           });
 
         });

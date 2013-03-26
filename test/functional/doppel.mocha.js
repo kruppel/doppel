@@ -50,15 +50,16 @@ options = {
 
 describe('[functional] doppel', function () {
 
+  var root = path.resolve(__dirname, '..', '..')
+    , tmp = path.join(root, 'tmp');
+
   describe('when an engine is not set', function () {
 
     beforeEach(function () {
-      this.root = path.resolve(__dirname, '..', '..');
-      this.modified = fs.lstatSync(this.root).mtime;
+      this.modified = fs.lstatSync(root).mtime;
     });
 
     afterEach(function () {
-      delete this.root;
       delete this.modified;
     });
 
@@ -74,7 +75,7 @@ describe('[functional] doppel', function () {
 
     it('does not make any file changes', function (done) {
       doppel(undefined, undefined, data, function (err) {
-        fs.lstat(this.root, function (err, stats) {
+        fs.lstat(root, function (err, stats) {
           stats.mtime.should.eql(this.modified);
 
           done();
@@ -87,29 +88,19 @@ describe('[functional] doppel', function () {
   describe('when not passed', function () {
 
     beforeEach(function () {
-      this.root = path.resolve(__dirname, '..', '..');
-      this.modified = fs.lstatSync(this.root).mtime;
+      this.modified = fs.lstatSync(root).mtime;
 
       doppel.use('underscore');
     });
 
     afterEach(function () {
-      delete this.root;
       delete this.modified;
     });
 
     describe('a source directory', function () {
 
-      beforeEach(function () {
-        this.dest = path.join(this.root, 'tmp');
-      });
-
-      afterEach(function () {
-        delete this.dest;
-      });
-
       it('calls back with an invalid source error', function (done) {
-        doppel(undefined, this.dest, data, function (err) {
+        doppel(undefined, tmp, data, function (err) {
           err.message.should.equal('Source path must be provided.');
 
           done();
@@ -117,8 +108,8 @@ describe('[functional] doppel', function () {
       });
 
       it('does not make any file changes', function (done) {
-        doppel(undefined, this.dest, data, function (err) {
-          fs.lstat(this.root, function (err, stats) {
+        doppel(undefined, tmp, data, function (err) {
+          fs.lstat(root, function (err, stats) {
             stats.mtime.should.eql(this.modified);
 
             done();
@@ -132,16 +123,14 @@ describe('[functional] doppel', function () {
 
       beforeEach(function () {
         this.src = 'this/path/should/never/ever/exist/please';
-        this.dest = path.join(this.root, 'tmp');
       });
 
       afterEach(function () {
         delete this.src;
-        delete this.dest;
       });
 
       it('calls back with an invalid source error', function (done) {
-        doppel(this.src, this.dest, data, function (err) {
+        doppel(this.src, tmp, data, function (err) {
           err.message.should.match(
             new RegExp(
               util.format(
@@ -156,8 +145,8 @@ describe('[functional] doppel', function () {
       });
 
       it('does not make any file changes', function (done) {
-        doppel(this.src, this.dest, data, function (err) {
-          fs.lstat(this.root, function (err, stats) {
+        doppel(this.src, tmp, data, function (err) {
+          fs.lstat(root, function (err, stats) {
             stats.mtime.should.eql(this.modified);
 
             done();
@@ -179,7 +168,7 @@ describe('[functional] doppel', function () {
 
       it('does not make any file changes', function (done) {
         doppel(expected.base, undefined, data, function (err) {
-          fs.lstat(this.root, function (err, stats) {
+          fs.lstat(root, function (err, stats) {
             stats.mtime.should.eql(this.modified);
 
             done();
@@ -194,13 +183,7 @@ describe('[functional] doppel', function () {
   describe('for a source directory', function () {
 
     before(function (ready) {
-      this.tmp = path.resolve(__dirname, '..', '..', 'tmp');
-
-      mkdirp(this.tmp, ready);
-    });
-
-    after(function () {
-      delete this.tmp;
+      mkdirp(tmp, ready);
     });
 
     _.each(engines, function (engine, name, index) {
@@ -232,9 +215,9 @@ describe('[functional] doppel', function () {
 
         _.each(targets, function (target, type) {
 
-          describe('of type \'' + type + '\'', function () {
+          var dest = path.join(tmp, name, type);
 
-            var dest = path.join(this.tmp, name, type);
+          describe('of type \'' + type + '\'', function () {
 
             beforeEach(function () {
               this.ok = true;
@@ -276,7 +259,7 @@ describe('[functional] doppel', function () {
 
           });
 
-        });
+        }, this);
 
       });
 

@@ -232,6 +232,38 @@ describe('[functional] cpr', function () {
 
       });
 
+      describe('in the destination directory', function () {
+
+        var name = 'src_in_dest'
+          , dest = fixtures.actual[name]
+          , src = path.join(dest, 'src');
+
+        it('calls back with an error', function (done) {
+          cpr.cpr(src, dest, function (err) {
+            err.message.should.equal(
+              util.format(
+                'Destination path %s cannot be parent of source directory %s.'
+              , dest
+              , src
+              )
+            );
+
+            done();
+          });
+        });
+
+        it('does not remove the source directory', function (done) {
+          cpr.cpr(src, dest, function (err) {
+            fs.existsSync(src).should.be.true;
+
+            done();
+          });
+        });
+
+        it('does not create a copy', function () {});
+
+      });
+
     });
 
   });

@@ -1,10 +1,3 @@
-@font-face {
-  font-family: Futura_;
-  src: url(../fonts/futura.eot#iefix) format('embedded-opentype'),
-       url(../fonts/futura.svg#sherpa) format('svg'),
-       url(../fonts/futura.ttf) format('truetype');
-}
-
 body {
   margin: 0;
   padding: 0;
@@ -46,12 +39,12 @@ td {
 
 h1,
 h2 {
-  font-family: Futura_;
+  font-family: futura-pt, sans-serif;
 }
 
 h2 {
-  font-size: 20px;
-  font-weight: normal;
+  font-size: 1.6;
+  font-weight: 500;
   margin: 0;
   padding: 5px 0;
   text-align: center;
@@ -129,8 +122,9 @@ p {
   color: black;
   cursor: pointer;
   display: block;
-  font-family: Futura_;
-  font-size: 72px;
+  font-family: futura-pt, sans-serif;
+  font-size: 4.8em;
+  font-style: normal;
   opacity: 0.9;
   padding: 50px 0 16px 0;
   text-align: center;
@@ -157,8 +151,8 @@ p {
 
 .masthead h1 {
   color: rgb(120,120,120);
-  font-size: 26px;
-  font-weight: normal;
+  font-size: 1.8em;
+  font-weight: 500;
   margin-top: 10px;
   text-align: center;
 }

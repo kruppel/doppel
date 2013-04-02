@@ -6,7 +6,7 @@ var fs = require('fs')
   , optimist = require('optimist')
   , doppel = require('./../lib/doppel')
   , pkg = require('./../package.json')
-  , executable;
+  , exec;
 
 exec = function (callback) {
   var argv

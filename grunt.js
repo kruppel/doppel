@@ -4,6 +4,7 @@ module.exports = function (grunt) {
     lint: {
       all: [
         'grunt.js'
+      , 'bin/doppel'
       , 'lib/**/*.js'
       , 'test/**/*.js'
       ]
